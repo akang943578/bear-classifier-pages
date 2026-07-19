@@ -1,4 +1,14 @@
 const API_BASE = "https://bear-sg.jklands.com";
+/** Gradio auth username — matches WEB_USER on the server. Password is WEB_PASS. */
+const AUTH_USER = "akang943578";
+const SESSION_FLAG = "bearClassifierLoggedIn";
+
+const gate = document.getElementById("gate");
+const app = document.getElementById("app");
+const loginForm = document.getElementById("login-form");
+const passwordInput = document.getElementById("password-input");
+const loginStatus = document.getElementById("login-status");
+const logoutBtn = document.getElementById("logout-btn");
 
 const fileInput = document.getElementById("file-input");
 const dropzone = document.getElementById("dropzone");
@@ -20,9 +30,80 @@ const LABEL_ZH = {
   teddy: "泰迪 teddy",
 };
 
+/** All Gradio requests must include cookies from /login. */
+function apiFetch(path, options = {}) {
+  return fetch(`${API_BASE}${path}`, {
+    ...options,
+    credentials: "include",
+    headers: options.headers || {},
+  });
+}
+
+function setLoginStatus(message, isError = false) {
+  loginStatus.textContent = message;
+  loginStatus.classList.toggle("is-error", isError);
+}
+
 function setStatus(message, isError = false) {
   statusEl.textContent = message;
   statusEl.classList.toggle("is-error", isError);
+}
+
+function showApp() {
+  gate.hidden = true;
+  app.hidden = false;
+  sessionStorage.setItem(SESSION_FLAG, "1");
+}
+
+function showGate() {
+  gate.hidden = false;
+  app.hidden = true;
+  sessionStorage.removeItem(SESSION_FLAG);
+  passwordInput.value = "";
+  passwordInput.focus();
+}
+
+async function verifySession() {
+  const res = await apiFetch("/gradio_api/info");
+  if (res.status === 401) return false;
+  if (!res.ok) throw new Error(`验证失败（${res.status}）`);
+  return true;
+}
+
+async function loginWithPassword(password) {
+  const body = new URLSearchParams({
+    username: AUTH_USER,
+    password,
+  });
+  const res = await apiFetch("/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  });
+  if (!res.ok) {
+    throw new Error(`登录失败（${res.status}）`);
+  }
+  const data = await res.json().catch(() => ({}));
+  if (data && data.success === false) {
+    throw new Error("密码错误");
+  }
+  const ok = await verifySession();
+  if (!ok) {
+    throw new Error("密码错误或 Cookie 未生效");
+  }
+  showApp();
+  setLoginStatus("");
+}
+
+async function logout() {
+  try {
+    await apiFetch("/logout");
+  } catch {
+    /* ignore */
+  }
+  clearAll();
+  showGate();
+  setLoginStatus("已退出");
 }
 
 function resetPreview() {
@@ -49,10 +130,14 @@ function showFile(file) {
 async function uploadImage(file) {
   const form = new FormData();
   form.append("files", file, file.name);
-  const res = await fetch(`${API_BASE}/gradio_api/upload`, {
+  const res = await apiFetch("/gradio_api/upload", {
     method: "POST",
     body: form,
   });
+  if (res.status === 401) {
+    await logout();
+    throw new Error("登录已失效，请重新输入密码");
+  }
   if (!res.ok) {
     throw new Error(`上传失败（${res.status}）`);
   }
@@ -73,11 +158,15 @@ async function runClassify(serverPath, file) {
       },
     ],
   };
-  const res = await fetch(`${API_BASE}/gradio_api/run/classify`, {
+  const res = await apiFetch("/gradio_api/run/classify", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
+  if (res.status === 401) {
+    await logout();
+    throw new Error("登录已失效，请重新输入密码");
+  }
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`识别失败（${res.status}）：${text.slice(0, 160)}`);
@@ -145,6 +234,26 @@ function clearAll() {
   setStatus("");
 }
 
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const password = passwordInput.value;
+  if (!password) return;
+  const btn = document.getElementById("login-btn");
+  btn.disabled = true;
+  setLoginStatus("验证中…");
+  try {
+    await loginWithPassword(password);
+  } catch (err) {
+    setLoginStatus(err.message || String(err), true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+logoutBtn.addEventListener("click", () => {
+  logout();
+});
+
 fileInput.addEventListener("change", () => {
   const file = fileInput.files?.[0];
   if (file) showFile(file);
@@ -172,3 +281,18 @@ dropzone.addEventListener("drop", (e) => {
 
 classifyBtn.addEventListener("click", classify);
 clearBtn.addEventListener("click", clearAll);
+
+(async function boot() {
+  try {
+    if (await verifySession()) {
+      showApp();
+      return;
+    }
+  } catch {
+    /* fall through to gate */
+  }
+  showGate();
+  if (sessionStorage.getItem(SESSION_FLAG)) {
+    setLoginStatus("登录已过期，请重新输入密码", true);
+  }
+})();

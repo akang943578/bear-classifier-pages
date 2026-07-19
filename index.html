@@ -19,7 +19,30 @@
   <body>
     <div class="atmosphere" aria-hidden="true"></div>
 
-    <main class="stage">
+    <section class="gate" id="gate" aria-label="登录">
+      <div class="gate-card">
+        <p class="brand-mark gate-brand">Bear Classifier</p>
+        <h1>输入访问密码</h1>
+        <p class="lede">与 Gradio 共用同一套账号密码（WEB_PASS）。</p>
+        <form id="login-form" class="login-form">
+          <label class="field">
+            <span>密码</span>
+            <input
+              id="password-input"
+              type="password"
+              name="password"
+              autocomplete="current-password"
+              required
+              autofocus
+            />
+          </label>
+          <button type="submit" class="btn primary" id="login-btn">进入</button>
+          <p class="status" id="login-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <main class="stage" id="app" hidden>
       <header class="brand">
         <p class="brand-mark">Bear Classifier</p>
         <h1>这只熊是哪一种？</h1>
@@ -51,6 +74,7 @@
           <button type="button" class="btn ghost" id="clear-btn" disabled>
             清除
           </button>
+          <button type="button" class="btn ghost" id="logout-btn">退出</button>
         </div>
 
         <p class="status" id="status" role="status" aria-live="polite"></p>

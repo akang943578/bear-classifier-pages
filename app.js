@@ -1,11 +1,10 @@
 const API_BASE = "https://bear-sg.jklands.com";
-/** Gradio auth username — matches WEB_USER on the server. Password is WEB_PASS. */
-const AUTH_USER = "akang943578";
 const SESSION_FLAG = "bearClassifierLoggedIn";
 
 const gate = document.getElementById("gate");
 const app = document.getElementById("app");
 const loginForm = document.getElementById("login-form");
+const usernameInput = document.getElementById("username-input");
 const passwordInput = document.getElementById("password-input");
 const loginStatus = document.getElementById("login-status");
 const logoutBtn = document.getElementById("logout-btn");
@@ -60,7 +59,7 @@ function showGate() {
   app.hidden = true;
   sessionStorage.removeItem(SESSION_FLAG);
   passwordInput.value = "";
-  passwordInput.focus();
+  usernameInput.focus();
 }
 
 async function verifySession() {
@@ -70,29 +69,26 @@ async function verifySession() {
   return true;
 }
 
-async function loginWithPassword(password) {
-  const body = new URLSearchParams({
-    username: AUTH_USER,
-    password,
-  });
+async function login(username, password) {
+  const body = new URLSearchParams({ username, password });
   const res = await apiFetch("/login", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
   });
   if (res.status === 400 || res.status === 401 || res.status === 403) {
-    throw new Error("密码错误");
+    throw new Error("用户名或密码错误");
   }
   if (!res.ok) {
     throw new Error(`登录失败（${res.status}）`);
   }
   const data = await res.json().catch(() => ({}));
   if (data && data.success === false) {
-    throw new Error("密码错误");
+    throw new Error("用户名或密码错误");
   }
   const ok = await verifySession();
   if (!ok) {
-    throw new Error("密码错误或 Cookie 未生效（可尝试关闭无痕模式）");
+    throw new Error("登录失败或 Cookie 未生效（可尝试关闭无痕模式）");
   }
   showApp();
   setLoginStatus("");
@@ -239,13 +235,14 @@ function clearAll() {
 
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
+  const username = usernameInput.value.trim();
   const password = passwordInput.value;
-  if (!password) return;
+  if (!username || !password) return;
   const btn = document.getElementById("login-btn");
   btn.disabled = true;
   setLoginStatus("验证中…");
   try {
-    await loginWithPassword(password);
+    await login(username, password);
   } catch (err) {
     setLoginStatus(err.message || String(err), true);
   } finally {

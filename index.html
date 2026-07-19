@@ -22,9 +22,20 @@
     <section class="gate" id="gate" aria-label="登录">
       <div class="gate-card">
         <p class="brand-mark gate-brand">Bear Classifier</p>
-        <h1>输入访问密码</h1>
-        <p class="lede">与 Gradio 共用同一套账号密码（WEB_PASS）。</p>
+        <h1>登录</h1>
+        <p class="lede">与 Gradio 使用同一套用户名和密码。</p>
         <form id="login-form" class="login-form">
+          <label class="field">
+            <span>用户名</span>
+            <input
+              id="username-input"
+              type="text"
+              name="username"
+              autocomplete="username"
+              required
+              autofocus
+            />
+          </label>
           <label class="field">
             <span>密码</span>
             <input
@@ -33,7 +44,6 @@
               name="password"
               autocomplete="current-password"
               required
-              autofocus
             />
           </label>
           <button type="submit" class="btn primary" id="login-btn">进入</button>

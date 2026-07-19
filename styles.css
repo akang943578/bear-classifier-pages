@@ -1,0 +1,336 @@
+:root {
+  --bg-0: #0f1a14;
+  --bg-1: #1a2e22;
+  --moss: #3d6b4f;
+  --leaf: #7cb089;
+  --amber: #e2a35a;
+  --amber-deep: #c47d2e;
+  --fog: #d7e4d9;
+  --ink: #eef5ef;
+  --muted: #a7b9ac;
+  --danger: #e07a6a;
+  --radius: 18px;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Manrope", system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--bg-0);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+.atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 80% 55% at 15% 10%, rgba(61, 107, 79, 0.45), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 90% 20%, rgba(226, 163, 90, 0.18), transparent 50%),
+    radial-gradient(ellipse 90% 70% at 50% 100%, rgba(26, 46, 34, 0.95), transparent 60%),
+    linear-gradient(165deg, #0c1510 0%, #15241b 45%, #0f1a14 100%);
+  animation: drift 18s ease-in-out infinite alternate;
+}
+
+.atmosphere::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+@keyframes drift {
+  from {
+    transform: scale(1) translate(0, 0);
+  }
+  to {
+    transform: scale(1.04) translate(-1.5%, 1%);
+  }
+}
+
+.stage {
+  width: min(720px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: clamp(2.5rem, 8vh, 5rem) 0 3rem;
+  display: grid;
+  gap: 1.75rem;
+}
+
+.brand {
+  animation: rise 0.7s ease both;
+}
+
+.brand-mark {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 7vw, 3.6rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--fog);
+}
+
+.brand h1 {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: clamp(1.05rem, 2.6vw, 1.25rem);
+  font-weight: 600;
+  color: var(--leaf);
+}
+
+.lede {
+  margin: 0.65rem 0 0;
+  max-width: 36ch;
+  color: var(--muted);
+  font-size: 0.98rem;
+}
+
+.workspace {
+  display: grid;
+  gap: 1rem;
+  animation: rise 0.85s ease 0.08s both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropzone {
+  display: block;
+  cursor: pointer;
+  border: 1px dashed rgba(124, 176, 137, 0.45);
+  border-radius: var(--radius);
+  background: rgba(15, 26, 20, 0.45);
+  backdrop-filter: blur(8px);
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease,
+    transform 0.25s ease;
+}
+
+.dropzone:hover,
+.dropzone.is-dragover {
+  border-color: var(--amber);
+  background: rgba(26, 46, 34, 0.65);
+  transform: translateY(-2px);
+}
+
+.dropzone-visual {
+  min-height: clamp(220px, 42vh, 360px);
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.dropzone-idle {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: center;
+  text-align: center;
+  color: var(--muted);
+  padding: 1.5rem;
+}
+
+.dropzone-idle strong {
+  color: var(--fog);
+  font-weight: 600;
+}
+
+.dropzone-idle span:last-child {
+  font-size: 0.85rem;
+}
+
+.dropzone-icon {
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 0.4rem;
+  border-radius: 50%;
+  border: 2px solid rgba(226, 163, 90, 0.55);
+  background:
+    linear-gradient(135deg, transparent 46%, var(--amber) 46%, var(--amber) 54%, transparent 54%),
+    linear-gradient(45deg, transparent 46%, var(--amber) 46%, var(--amber) 54%, transparent 54%);
+  background-size: 1.1rem 1.1rem;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.9;
+}
+
+#preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  position: absolute;
+  inset: 0;
+  animation: fade-in 0.35s ease;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.btn {
+  font: inherit;
+  font-weight: 600;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.85rem 1.35rem;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease,
+    background 0.2s ease;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, var(--amber) 0%, var(--amber-deep) 100%);
+  color: #1a1208;
+}
+
+.btn.ghost {
+  background: transparent;
+  color: var(--fog);
+  box-shadow: inset 0 0 0 1px rgba(215, 228, 217, 0.28);
+}
+
+.status {
+  min-height: 1.4em;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.status.is-error {
+  color: var(--danger);
+}
+
+.results {
+  padding-top: 0.35rem;
+  animation: rise 0.45s ease both;
+}
+
+.results-kicker {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.results-label {
+  margin: 0.35rem 0 1rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 5vw, 2.4rem);
+  font-weight: 700;
+  color: var(--fog);
+}
+
+.bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.bars li {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.bar-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.92rem;
+  color: var(--fog);
+}
+
+.bar-track {
+  height: 0.55rem;
+  border-radius: 999px;
+  background: rgba(215, 228, 217, 0.12);
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--moss), var(--leaf));
+  transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bars li:first-child .bar-fill {
+  background: linear-gradient(90deg, var(--amber-deep), var(--amber));
+}
+
+.foot {
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  animation: rise 1s ease 0.15s both;
+}
+
+.foot a {
+  color: var(--leaf);
+  text-underline-offset: 0.18em;
+}
+
+.foot a:hover {
+  color: var(--amber);
+}
+
+@media (max-width: 520px) {
+  .actions {
+    display: grid;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}

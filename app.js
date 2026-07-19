@@ -69,37 +69,59 @@ async function verifySession() {
   return true;
 }
 
-async function login(username, password) {
-  const body = new URLSearchParams({ username, password });
-  const res = await apiFetch("/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-  });
-  if (res.status === 400 || res.status === 401 || res.status === 403) {
-    throw new Error("用户名或密码错误");
-  }
-  if (!res.ok) {
-    throw new Error(`登录失败（${res.status}）`);
-  }
-  const data = await res.json().catch(() => ({}));
-  if (data && data.success === false) {
-    throw new Error("用户名或密码错误");
-  }
-  const ok = await verifySession();
-  if (!ok) {
-    throw new Error("登录失败或 Cookie 未生效（可尝试关闭无痕模式）");
-  }
-  showApp();
-  setLoginStatus("");
-}
-
-async function logout() {
+/** Clear Gradio session cookies so a previous login cannot leak through. */
+async function clearGradioSession() {
   try {
     await apiFetch("/logout");
   } catch {
     /* ignore */
   }
+}
+
+async function login(username, password) {
+  const user = username.trim();
+  const pass = password;
+  if (!user || !pass) {
+    throw new Error("请输入用户名和密码");
+  }
+
+  // Important: an old access-token cookie stays valid even after a failed /login.
+  // Always logout first, then require a fresh successful login for THIS username.
+  await clearGradioSession();
+
+  const body = new URLSearchParams({ username: user, password: pass });
+  const res = await apiFetch("/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  });
+
+  if (!res.ok) {
+    await clearGradioSession();
+    if (res.status === 400 || res.status === 401 || res.status === 403) {
+      throw new Error("用户名或密码错误");
+    }
+    throw new Error(`登录失败（${res.status}）`);
+  }
+
+  const data = await res.json().catch(() => null);
+  if (!data || data.success !== true) {
+    await clearGradioSession();
+    throw new Error("用户名或密码错误");
+  }
+
+  const ok = await verifySession();
+  if (!ok) {
+    await clearGradioSession();
+    throw new Error("登录失败或 Cookie 未生效（可尝试关闭无痕模式）");
+  }
+
+  showApp();
+  setLoginStatus("");
+}
+
+async function logout() {
+  await clearGradioSession();
   clearAll();
   showGate();
   setLoginStatus("已退出");

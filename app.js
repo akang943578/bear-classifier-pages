@@ -80,6 +80,9 @@ async function loginWithPassword(password) {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
   });
+  if (res.status === 400 || res.status === 401 || res.status === 403) {
+    throw new Error("密码错误");
+  }
   if (!res.ok) {
     throw new Error(`登录失败（${res.status}）`);
   }
@@ -89,7 +92,7 @@ async function loginWithPassword(password) {
   }
   const ok = await verifySession();
   if (!ok) {
-    throw new Error("密码错误或 Cookie 未生效");
+    throw new Error("密码错误或 Cookie 未生效（可尝试关闭无痕模式）");
   }
   showApp();
   setLoginStatus("");
